@@ -25,15 +25,16 @@ loop init_input = do
     let x = read input_line :: Int -- the position on the road of the motorbike.
     hPutStrLn stderr $ "speed = " ++ show s ++ ", position = " ++ show x ++ "\n"
     hPutStrLn stderr $ showInit init_input
-    -- hPutStrLn stderr "Debug messages..."
 
-    -- A single line containing one of 4 keywords: SPEED, SLOW, JUMP, WAIT.
-    if r init_input > x + s then if s + x + 1 > r init_input then do putStrLn "WAIT"
-                                                                     loop init_input
-                                                             else do putStrLn "SPEED"
-                                                                     loop init_input
-                            else do putStrLn "JUMP"
-                                    stoploop
+    if r init_input == x + 1 then do putStrLn "JUMP"
+                                     stoploop
+                             else do putStrLn $ calcSpeed s $ g init_input 
+                                     loop init_input
+
+calcSpeed :: Int -> Int -> String
+calcSpeed s g | s == g + 1 = "WAIT"
+              | s > g + 1 = "SLOW"
+              | s < g + 1 = "SPEED"
 
 stoploop :: IO ()
 stoploop = do
