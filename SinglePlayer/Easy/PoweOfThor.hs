@@ -19,17 +19,22 @@ loop pos = do
     hPutStrLn stderr $ "e = " ++ show e ++ "\n"
     
     -- A single line providing the move to be made: N NE E SE S SW W or NW
-    putStrLn "SE"
+    let nextPos = calcPos pos
+    putStrLn $ snd nextPos
     
-    loop pos
+    loop $ fst nextPos
 
 calcPos :: [Int] -> ([Int], String)
-calcPos pos = (newPos, dir)
+calcPos pos = ([lx, ly, fst we tx, fst ns ty], snd ns ++ snd we)
     where lx = pos!!0 -- the X position of the light of power
           ly = pos!!1 -- the Y position of the light of power
           tx = pos!!2 -- Thor's starting X position
           ty = pos!!3 -- Thor's starting Y position
-          newPos = pos
-          dir = calcDir pos
-          calcDir = dy ++ dx
-          dy = 
+          ns
+            | ly > ty = ((+1),"S")
+            | ly < ty = ((subtract 1),"N")
+            | otherwise = ((+0),"")
+          we
+            | lx > tx = ((+1),"E")
+            | lx < tx = ((subtract 1),"W")
+            | otherwise = ((+0),"")
