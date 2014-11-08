@@ -7,9 +7,6 @@ readCoord :: String -> Coord -- "1000 100" -> (1000, 100)
 readCoord str = (input!!0, input!!1)
     where input = map (read :: String -> Int) $ words str
 
--- land :: [Coord] -> Int -- [(0,100),(1000,500),(1500,100),(3000,100)] -> 2250
--- land coords = fixPoint $ mapLandLength coords
-
 landNthLength :: [Coord] -> Int -> (Coord, Int) -- [Coords], n to (Coords, flatLandLength)
 landNthLength arr n = getLen $ takeWhile (\x -> snd x == snd (arr' !! 0) ) arr'
     where arr' = drop n arr
@@ -18,6 +15,14 @@ landNthLength arr n = getLen $ takeWhile (\x -> snd x == snd (arr' !! 0) ) arr'
 mapLandLength :: [Coord] -> [(Coord, Int)] -- [Coords] to [(Coords, flatLandLength)]
 mapLandLength coords = map (landNthLength coords) [0..(length coords - 1)]
 
+mostOpenPoint :: [(Coord, Int)] -> (Coord, Int)
+mostOpenPoint = foldr (\x acc -> if snd x < snd acc then acc else x) ((0, 0), 0)
+
+landPoint :: (Coord, Int) -> Coord
+landPoint (pos, w) = (fst pos + (w `div` 2), snd pos)
+
+calcLandPoint :: [Coord] -> Coord
+calcLandPoint arr = landPoint $ mostOpenPoint $ mapLandLength arr
 
 main :: IO ()
 main = do
@@ -31,11 +36,12 @@ main = do
     coords <- replicateM n getLine -- coords == ["0 100", "1000 500", "1500 100"]
     let landingPoint = map readCoord coords -- select a x coordinate to land, which is center of largest flat land
     hPutStrLn stderr $ show landingPoint
+    hPutStrLn stderr $ show $ calcLandPoint landingPoint
 
-    loop
+    loop $ calcLandPoint landingPoint
 
-loop :: IO ()
-loop = do
+loop :: Coord -> IO ()
+loop land = do
     input_line <- getLine
     let input = words input_line
     let x = read (input!!0) :: Int
@@ -47,8 +53,22 @@ loop = do
     let p = read (input!!6) :: Int -- the thrust power (0 to 4).
 
     -- hPutStrLn stderr "Debug messages..."
+    let outr = setAngle land x y
+    let outp = setPower land y
 
     -- R P. R is the desired rotation angle. P is the desired thrust power.
-    putStrLn "-20 3"
+    putStrLn $ show outr ++ " " ++ show outp
 
-    loop
+    loop land
+
+setAngle :: Coord -> Int -> Int -> Int
+setAngle pos x y
+    | y < (snd pos) + 1000 = 0
+    | x < (fst pos - 20)  = negate 10
+    | (x + 20) > fst pos  = 10
+    | otherwise           = 0
+
+setPower :: Coord -> Int -> Int
+setPower pos y
+    | y < (snd pos) + 1000 = 4
+    | otherwise = 3
